@@ -1,0 +1,22 @@
+/* File: styles/globals.css */
+/* Task: Tailwind base + cinematic polish. Soft background, editorial typography. */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-stone-50 text-stone-900 font-sans selection:bg-emerald-900 selection:text-white;
+  }
+}
+
+/* Custom fade-in animation util */
+.animate-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
