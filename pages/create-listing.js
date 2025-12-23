@@ -28,7 +28,7 @@ export default function CreateListingPage({ session }) {
     e.preventDefault();
     setIsSubmitting(true);
 
-    let imageUrl = `https://images.unsplash.com/photo-${Math.random() > 0.5 ? '1586023912994-d11893c834a0' : '1502005229762-cf1afd39744e'}?auto=format&fit=crop&q=80&w=800`;  // Default
+    let imageUrl = `https://images.unsplash.com/photo-${Math.random() > 0.5 ? '1506905929635-46a48e5f8d94' : '1472214103451-9378bd02f756'}?auto=format&fit=crop&q=80&w=800`;  // Default
 
     if (selectedFile) {
       if (selectedFile.size > 50 * 1024 * 1024) {  // 50MB limit to match Supabase
