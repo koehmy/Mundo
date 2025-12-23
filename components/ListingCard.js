@@ -47,6 +47,12 @@ const ListingCard = ({ item }) => (
         <span className="text-stone-400 truncate max-w-[120px]">{item.landmark}</span>
       </div>
 
+      {item.description && (
+        <p className="text-stone-600 text-sm mb-4 line-clamp-2">
+          {item.description}
+        </p>
+      )}
+
       <div className="mt-auto flex items-center justify-between border-t border-stone-100 pt-4">
         <div className="flex flex-col">
           <span className="text-xs text-stone-400 uppercase tracking-wider">

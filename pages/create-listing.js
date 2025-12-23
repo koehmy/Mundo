@@ -17,6 +17,7 @@ export default function CreateListingPage({ session }) {
     landmark: '',
     description: ''
   });
+  const [selectedFile, setSelectedFile] = useState(null);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -27,15 +28,38 @@ export default function CreateListingPage({ session }) {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // In a real app, handle image file upload to Supabase Storage here.
-    // For now, we assign a random Unsplash image.
-    const randomImage = `https://images.unsplash.com/photo-${Math.random() > 0.5 ? '1586023912994-d11893c834a0' : '1502005229762-cf1afd39744e'}?auto=format&fit=crop&q=80&w=800`;
+    let imageUrl = `https://images.unsplash.com/photo-${Math.random() > 0.5 ? '1586023912994-d11893c834a0' : '1502005229762-cf1afd39744e'}?auto=format&fit=crop&q=80&w=800`;  // Default
+
+    if (selectedFile) {
+      if (selectedFile.size > 50 * 1024 * 1024) {  // 50MB limit to match Supabase
+        alert('Image file is too large. Max 50MB.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const fileName = `${session.user.id}-${Date.now()}-${selectedFile.name}`;
+      const { data, error } = await supabase.storage
+        .from('listing-images')
+        .upload(fileName, selectedFile);
+
+      if (error) {
+        alert('Error uploading image: ' + error.message);
+        setIsSubmitting(false);
+        return;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('listing-images')
+        .getPublicUrl(fileName);
+
+      imageUrl = publicUrlData.publicUrl;
+    }
 
     const { error } = await supabase.from('listings').insert([{
       ...formData,
       price: Number(formData.price),
       user_id: session.user.id,
-      image: randomImage,
+      image: imageUrl,
       verified: false // Defaults to false, admin must verify
     }]);
 
@@ -127,6 +151,28 @@ export default function CreateListingPage({ session }) {
               onChange={e => setFormData({...formData, landmark: e.target.value})}
             />
             <p className="text-xs text-stone-400 mt-1">We don&apos;t show exact addresses for safety.</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">Description</label>
+            <textarea
+              rows="4"
+              className="w-full px-4 py-3 rounded-lg border border-stone-200 focus:ring-2 focus:ring-emerald-900/20 focus:border-emerald-900 outline-none transition-all resize-none"
+              placeholder="Describe your rental or service in detail..."
+              value={formData.description}
+              onChange={e => setFormData({...formData, description: e.target.value})}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">Image (Optional)</label>
+            <input
+              type="file"
+              accept="image/*"
+              className="w-full px-4 py-3 rounded-lg border border-stone-200 focus:ring-2 focus:ring-emerald-900/20 focus:border-emerald-900 outline-none transition-all"
+              onChange={(e) => setSelectedFile(e.target.files[0])}
+            />
+            <p className="text-xs text-stone-400 mt-1">Upload a photo of your listing. Max 50MB. JPEG, PNG, or WebP only.</p>
           </div>
 
           <button
