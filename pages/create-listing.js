@@ -15,7 +15,8 @@ export default function CreateListingPage({ session }) {
     price: '',
     location: '',
     landmark: '',
-    description: ''
+    description: '',
+    phone: ''
   });
   const [selectedFile, setSelectedFile] = useState(null);
 
@@ -151,6 +152,19 @@ export default function CreateListingPage({ session }) {
               onChange={e => setFormData({...formData, landmark: e.target.value})}
             />
             <p className="text-xs text-stone-400 mt-1">We don&apos;t show exact addresses for safety.</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">WhatsApp Number</label>
+            <input
+              required
+              type="tel"
+              className="w-full px-4 py-3 rounded-lg border border-stone-200 focus:ring-2 focus:ring-emerald-900/20 focus:border-emerald-900 outline-none transition-all"
+              placeholder="e.g. +52551234567"
+              value={formData.phone}
+              onChange={e => setFormData({...formData, phone: e.target.value})}
+            />
+            <p className="text-xs text-stone-400 mt-1">Include country code for WhatsApp contact.</p>
           </div>
 
           <div>

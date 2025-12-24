@@ -66,7 +66,8 @@ const ListingCard = ({ item }) => (
         <button
           onClick={(e) => {
             e.stopPropagation();
-            window.open(`https://wa.me/?text=Hi, I saw ${item.title} on Mundo Cerca.`, '_blank');
+            const cleanPhone = item.phone.replace(/\D/g, ''); // Remove non-digits
+            window.open(`https://wa.me/${cleanPhone}?text=Hi, I saw ${item.title} on Mundo Cerca.`, '_blank');
           }}
           className="p-2 rounded-full bg-stone-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all"
           title="Contact via WhatsApp"
