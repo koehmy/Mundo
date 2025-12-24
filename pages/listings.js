@@ -6,7 +6,7 @@ import { Search, Loader2 } from 'lucide-react';
 import ListingCard from '../components/ListingCard';
 import { supabase } from '../lib/supabaseClient';
 
-export default function ListingsPage({ initialListings }) {
+export default function ListingsPage({ initialListings, session }) {
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
   const [listings] = useState(initialListings || []);
@@ -60,7 +60,7 @@ export default function ListingsPage({ initialListings }) {
       {filtered.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filtered.map(item => (
-            <ListingCard key={item.id} item={item} />
+            <ListingCard key={item.id} item={item} session={session} />
           ))}
         </div>
       ) : (

@@ -7,7 +7,7 @@ import { ChevronRight, ShieldCheck, MapPin, MessageCircle } from 'lucide-react';
 import ListingCard from '../components/ListingCard';
 import { supabase } from '../lib/supabaseClient';
 
-export default function Home({ featuredListings }) {
+export default function Home({ featuredListings, session }) {
   return (
     <div>
       {/* Hero Section */}
@@ -61,7 +61,7 @@ export default function Home({ featuredListings }) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {featuredListings && featuredListings.map(item => (
-            <ListingCard key={item.id} item={item} />
+            <ListingCard key={item.id} item={item} session={session} />
           ))}
         </div>
 

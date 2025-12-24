@@ -2,9 +2,9 @@
 // Task: Reusable card component for grid display. Shows details + WhatsApp CTA.
 
 import Image from 'next/image';
-import { MapPin, ShieldCheck, MessageCircle } from 'lucide-react';
+import { MapPin, ShieldCheck, MessageCircle, Trash2 } from 'lucide-react';
 
-const ListingCard = ({ item }) => (
+const ListingCard = ({ item, session }) => (
   <div className="group relative bg-white border border-stone-100 rounded-xl overflow-hidden hover:shadow-2xl hover:shadow-stone-200 transition-all duration-500 ease-out cursor-pointer h-full flex flex-col">
     {/* Image container */}
     <div className="relative aspect-[4/3] overflow-hidden bg-stone-200">
@@ -63,17 +63,38 @@ const ListingCard = ({ item }) => (
           </span>
         </div>
        
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            const cleanPhone = item.phone.replace(/\D/g, ''); // Remove non-digits
-            window.open(`https://wa.me/${cleanPhone}?text=Hi, I saw ${item.title} on Mundo Cerca.`, '_blank');
-          }}
-          className="p-2 rounded-full bg-stone-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all"
-          title="Contact via WhatsApp"
-        >
-          <MessageCircle size={20} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              const cleanPhone = item.phone.replace(/\D/g, ''); // Remove non-digits
+              window.open(`https://wa.me/${cleanPhone}?text=Hi, I saw ${item.title} on Mundo Cerca.`, '_blank');
+            }}
+            className="p-2 rounded-full bg-stone-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all"
+            title="Contact via WhatsApp"
+          >
+            <MessageCircle size={20} />
+          </button>
+          
+          {session && (session.user.id === item.user_id || session.user.email.includes('admin')) && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm('Are you sure you want to delete this listing?')) {
+                  fetch('/api/delete-listing', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: item.id }),
+                  }).then(() => window.location.reload());
+                }
+              }}
+              className="p-2 rounded-full bg-stone-50 text-red-600 hover:bg-red-600 hover:text-white transition-all"
+              title="Delete listing"
+            >
+              <Trash2 size={20} />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   </div>
