@@ -14,7 +14,7 @@ export default function Home({ featuredListings, session }) {
       <div className="relative h-[80vh] w-full overflow-hidden flex items-center justify-center">
         <div className="absolute inset-0">
           <Image
-            src="https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?auto=format&fit=crop&q=80&w=2000"
+            src="https://plus.unsplash.com/premium_photo-1733259726331-fddc4fc132d1?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
             fill
             className="object-cover"
             alt="Mexico City Street"
