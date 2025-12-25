@@ -11,10 +11,12 @@ export default function AdminPage({ session }) {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     if (!session) {
       router.replace('/login');
+      setChecking(false);
       return;
     }
     // Fetch user role from profiles
@@ -25,8 +27,9 @@ export default function AdminPage({ session }) {
       .single()
       .then(({ data, error }) => {
         if (error) {
-          console.error('[Admin Dashboard] Error fetching user role:', error);
+          console.error('[Admin Dashboard] Role fetch failed', error);
           setErrorMsg('Failed to load admin role.');
+          setChecking(false);
           return;
         }
         if (!data || data.role !== 'admin') {
@@ -34,6 +37,7 @@ export default function AdminPage({ session }) {
         } else {
           setRole('admin');
         }
+        setChecking(false);
       });
   }, [session, router]);
 
@@ -100,6 +104,7 @@ export default function AdminPage({ session }) {
     }
   };
 
+  if (checking) return <div>Loading admin…</div>;
   if (!session || role !== 'admin') return null;
 
   return (
