@@ -16,6 +16,9 @@ export default function ProfilePage({ session }) {
   const [loading, setLoading] = useState(true);
   const [editData, setEditData] = useState({ display_name: '', avatar_url: '' });
   const [editStatus, setEditStatus] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarError, setAvatarError] = useState(null);
 
   useEffect(() => {
     if (!session) {
@@ -49,18 +52,41 @@ export default function ProfilePage({ session }) {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     setEditStatus(null);
+    setAvatarError(null);
+    let avatarUrl = editData.avatar_url;
+    // If a new avatar file is selected, upload it
+    if (avatarFile) {
+      const ext = avatarFile.name.split('.').pop();
+      const filePath = `avatars/${session.user.id}.${ext}`;
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, avatarFile, { upsert: true });
+      if (uploadError) {
+        setAvatarError('Failed to upload avatar.');
+        return;
+      }
+      // Get public URL
+      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      avatarUrl = data.publicUrl;
+    }
+    // Clear preview after submit
+    setAvatarPreview(null);
+    setAvatarFile(null);
+    // Update profile with new avatar URL
     const { error } = await supabase
       .from('profiles')
       .update({
         display_name: editData.display_name,
-        avatar_url: editData.avatar_url,
+        avatar_url: avatarUrl,
       })
       .eq('id', session.user.id);
     if (error) {
       setEditStatus('error');
     } else {
       setEditStatus('success');
-      setProfile({ ...profile, ...editData });
+      setProfile({ ...profile, ...editData, avatar_url: avatarUrl });
+      setEditData({ ...editData, avatar_url: avatarUrl });
     }
   };
 
@@ -71,9 +97,17 @@ export default function ProfilePage({ session }) {
       <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
         <div className="h-32 bg-stone-900 relative">
           <div className="absolute -bottom-10 left-8">
-            <div className="w-24 h-24 bg-emerald-100 rounded-full border-4 border-white flex items-center justify-center text-3xl font-serif font-bold text-emerald-900">
-              {session.user.email[0].toUpperCase()}
-            </div>
+            {profile?.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt="Avatar"
+                className="w-24 h-24 rounded-full border-4 border-white object-cover"
+              />
+            ) : (
+              <div className="w-24 h-24 bg-emerald-100 rounded-full border-4 border-white flex items-center justify-center text-3xl font-serif font-bold text-emerald-900">
+                {session.user.email[0].toUpperCase()}
+              </div>
+            )}
           </div>
         </div>
         <div className="pt-14 pb-8 px-8">
@@ -96,13 +130,41 @@ export default function ProfilePage({ session }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">Avatar URL</label>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Avatar Image (optional)</label>
                 <input
-                  type="url"
+                  type="file"
+                  accept="image/*"
                   className="w-full px-4 py-3 rounded-lg border border-stone-200 focus:ring-2 focus:ring-emerald-900/20 focus:border-emerald-900 outline-none"
-                  value={editData.avatar_url}
-                  onChange={e => setEditData({ ...editData, avatar_url: e.target.value })}
+                  onChange={e => {
+                    setAvatarError(null);
+                    const file = e.target.files[0];
+                    if (!file) {
+                      setAvatarFile(null);
+                      setAvatarPreview(null);
+                      return;
+                    }
+                    if (!file.type.startsWith('image/')) {
+                      setAvatarError('File must be an image.');
+                      setAvatarFile(null);
+                      setAvatarPreview(null);
+                      return;
+                    }
+                    if (file.size > 5 * 1024 * 1024) {
+                      setAvatarError('Image must be less than 5MB.');
+                      setAvatarFile(null);
+                      setAvatarPreview(null);
+                      return;
+                    }
+                    setAvatarFile(file);
+                    setAvatarPreview(URL.createObjectURL(file));
+                  }}
                 />
+                {avatarError && <div className="text-red-600 mt-2">{avatarError}</div>}
+                {avatarPreview && (
+                  <div className="mt-2">
+                    <img src={avatarPreview} alt="Avatar Preview" className="w-24 h-24 rounded-full object-cover border" />
+                  </div>
+                )}
               </div>
               <button
                 type="submit"
