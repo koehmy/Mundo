@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabaseClient';
 export default function CreateListingPage({ session }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
   const [formData, setFormData] = useState({
     type: 'rental',
     title: '',
@@ -33,7 +34,8 @@ export default function CreateListingPage({ session }) {
 
     if (selectedFile) {
       if (selectedFile.size > 50 * 1024 * 1024) {  // 50MB limit to match Supabase
-        alert('Image file is too large. Max 50MB.');
+        console.error('[Create Listing] Image file too large:', selectedFile);
+        setErrorMsg('Image file is too large. Max 50MB.');
         setIsSubmitting(false);
         return;
       }
@@ -44,7 +46,8 @@ export default function CreateListingPage({ session }) {
         .upload(fileName, selectedFile);
 
       if (error) {
-        alert('Error uploading image: ' + error.message);
+        console.error('[Create Listing] Error uploading image:', error);
+        setErrorMsg('Error uploading image.');
         setIsSubmitting(false);
         return;
       }
@@ -67,15 +70,22 @@ export default function CreateListingPage({ session }) {
     if (!error) {
       router.push('/listings');
     } else {
-      alert('Error creating listing: ' + error.message);
+      console.error('[Create Listing] Error creating listing:', error);
+      setErrorMsg('Error creating listing.');
       setIsSubmitting(false);
     }
   };
 
   if (!session) return null;
 
+  // Show error message if present
+  // (You may want to place this in the UI as appropriate)
+
   return (
     <div className="min-h-screen bg-stone-50 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+      {errorMsg && (
+        <div className="mb-4 text-red-600 text-center">{errorMsg}</div>
+      )}
       <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl shadow-stone-200/50 p-8 border border-stone-100">
         <div className="mb-8">
           <h2 className="text-3xl font-serif font-bold text-stone-900">Create a Listing</h2>

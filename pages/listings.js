@@ -6,7 +6,7 @@ import { Search, Loader2 } from 'lucide-react';
 import ListingCard from '../components/ListingCard';
 import { supabase } from '../lib/supabaseClient';
 
-export default function ListingsPage({ initialListings, session }) {
+export default function ListingsPage({ initialListings, session, errorMsg }) {
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
   const [listings] = useState(initialListings || []);
@@ -22,6 +22,9 @@ export default function ListingsPage({ initialListings, session }) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-screen">
+      {errorMsg && (
+        <div className="mb-4 text-red-600 text-center">{errorMsg}</div>
+      )}
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
         <div>
           <h1 className="text-4xl font-serif font-bold text-stone-900 mb-4">Explore Neighborhoods</h1>
@@ -78,30 +81,57 @@ export async function getServerSideProps(context) {
   let user = null;
   const { req } = context;
   const access_token = req.cookies['sb-access-token'];
+  let errorMsg = null;
   if (access_token) {
-    const { data } = await supabase.auth.getUser(access_token);
-    user = data?.user;
+    try {
+      const { data } = await supabase.auth.getUser(access_token);
+      user = data?.user;
+    } catch (error) {
+      console.error('[Listings SSR] Error fetching user:', error);
+      errorMsg = 'Failed to load user.';
+    }
   }
 
   let isAdmin = false;
   if (user) {
-    const { data } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-    isAdmin = data?.role === 'admin';
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      if (profileError) {
+        console.error('[Listings SSR] Error fetching profile:', profileError);
+        errorMsg = 'Failed to load user profile.';
+      }
+      isAdmin = profile?.role === 'admin';
+    } catch (error) {
+      console.error('[Listings SSR] Error fetching profile:', error);
+      errorMsg = 'Failed to load user profile.';
+    }
   }
 
-  let query = supabase.from('listings').select('id, title, type, price, location, landmark, description, phone, image, user_id, verified, created_at').order('created_at', { ascending: false });
-  if (!isAdmin) {
-    query = query.eq('verified', true);
+  let initialListings = [];
+  try {
+    let query = supabase.from('listings').select('id, title, type, price, location, landmark, description, phone, image, user_id, verified, created_at').order('created_at', { ascending: false });
+    if (!isAdmin) {
+      query = query.eq('verified', true);
+    }
+    const { data, error: listingsError } = await query;
+    if (listingsError) {
+      console.error('[Listings SSR] Error fetching listings:', listingsError);
+      errorMsg = 'Failed to load listings.';
+    }
+    initialListings = data || [];
+  } catch (error) {
+    console.error('[Listings SSR] Error fetching listings:', error);
+    errorMsg = 'Failed to load listings.';
   }
-  const { data: initialListings } = await query;
 
   return {
     props: {
-      initialListings: initialListings || [],
+      initialListings,
+      errorMsg,
     },
   };
 }

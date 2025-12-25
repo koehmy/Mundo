@@ -33,7 +33,9 @@ export default function ProfilePage({ session }) {
       .single()
       .then(({ data, error }) => {
         if (error) {
-          console.error('[Profiles] Error fetching profile:', error.message);
+          console.error('[Profile Fetch]', error);
+          setEditStatus('Failed to load profile.');
+          return;
         }
         setProfile(data);
         setEditData({
@@ -49,7 +51,10 @@ export default function ProfilePage({ session }) {
       .eq('user_id', session.user.id)
       .then(({ data, error }) => {
         if (error) {
-          console.error('[Listings] Error fetching listings:', error.message);
+          console.error('[Profile Listings Fetch]', error);
+          setEditStatus('Failed to load your listings.');
+          setLoading(false);
+          return;
         }
         setListings(data || []);
         setLoading(false);
@@ -69,41 +74,45 @@ export default function ProfilePage({ session }) {
         // Remove existing file first (Supabase Storage upsert is not always reliable for same path)
         const { error: removeError } = await supabase.storage.from('avatars').remove([filePath]);
         if (removeError) {
-          console.error('[Storage] Error removing old avatar:', removeError.message);
+          console.error('[Avatar Upload] Error removing old avatar:', removeError);
+          setAvatarError('Failed to remove old avatar.');
+          return;
         }
         const { error: uploadError } = await supabase.storage
           .from('avatars')
           .upload(filePath, avatarFile, { upsert: true });
         if (uploadError) {
-          // If error is 'The resource already exists', try to remove and upload again
           if (uploadError.message && uploadError.message.includes('already exists')) {
             const { error: retryRemoveError } = await supabase.storage.from('avatars').remove([filePath]);
             if (retryRemoveError) {
-              console.error('[Storage] Error removing avatar for retry:', retryRemoveError.message);
+              console.error('[Avatar Upload] Error removing avatar for retry:', retryRemoveError);
+              setAvatarError('Failed to remove avatar for retry.');
+              return;
             }
             const { error: retryError } = await supabase.storage
               .from('avatars')
               .upload(filePath, avatarFile, { upsert: true });
             if (retryError) {
+              console.error('[Avatar Upload] Avatar upload retry error:', retryError);
               setAvatarError('Failed to upload avatar.');
-              console.error('[Storage] Avatar upload retry error:', retryError.message);
               return;
             }
           } else {
+            console.error('[Avatar Upload] Avatar upload error:', uploadError);
             setAvatarError('Failed to upload avatar.');
-            console.error('[Storage] Avatar upload error:', uploadError.message);
             return;
           }
         }
-        // Get public URL
         const { data, error: urlError } = supabase.storage.from('avatars').getPublicUrl(filePath);
         if (urlError) {
-          console.error('[Storage] Error getting public URL:', urlError.message);
+          console.error('[Avatar Upload] Error getting public URL:', urlError);
+          setAvatarError('Failed to get avatar URL.');
+          return;
         }
         avatarUrl = data.publicUrl;
       } catch (err) {
+        console.error('[Avatar Upload] Unexpected error:', err);
         setAvatarError('Unexpected error during avatar upload.');
-        console.error('[Storage] Unexpected avatar upload error:', err);
         return;
       }
     }
@@ -120,8 +129,9 @@ export default function ProfilePage({ session }) {
       })
       .eq('id', session.user.id);
     if (error) {
-      setEditStatus('error');
-      console.error('[Profiles] Profile update error:', error.message);
+      console.error('[Profile Update]', error);
+      setEditStatus('Failed to update profile.');
+      return;
     } else {
       setEditStatus('success');
       setProfile({ ...profile, ...editData, avatar_url: avatarUrl });

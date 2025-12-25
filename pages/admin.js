@@ -10,19 +10,25 @@ export default function AdminPage({ session }) {
   const [role, setRole] = useState(null);
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   useEffect(() => {
     if (!session) {
       router.replace('/login');
       return;
     }
-    // Fetch user role
+    // Fetch user role from profiles
     supabase
-      .from('users')
+      .from('profiles')
       .select('role')
       .eq('id', session.user.id)
       .single()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('[Admin Dashboard] Error fetching user role:', error);
+          setErrorMsg('Failed to load admin role.');
+          return;
+        }
         if (!data || data.role !== 'admin') {
           router.replace('/');
         } else {
@@ -35,9 +41,15 @@ export default function AdminPage({ session }) {
     if (role === 'admin') {
       supabase
         .from('listings')
-        .select('*')
+        .select('id, title, user_id, created_at, verified, image, location, landmark, description')
         .eq('verified', false)
-        .then(({ data }) => {
+        .then(({ data, error }) => {
+          if (error) {
+            console.error('[Admin Dashboard] Error fetching unverified listings:', error);
+            setErrorMsg('Failed to load unverified listings.');
+            setLoading(false);
+            return;
+          }
           setListings(data || []);
           setLoading(false);
         });
@@ -45,27 +57,52 @@ export default function AdminPage({ session }) {
   }, [role]);
 
   const handleVerify = async (id) => {
-    await fetch('/api/verify-listing', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    });
-    setListings(listings.filter(l => l.id !== id));
+    try {
+      const res = await fetch('/api/verify-listing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        console.error('[Admin Verify Listing]', err);
+        setErrorMsg('Failed to verify listing.');
+        return;
+      }
+      setListings(listings.filter(l => l.id !== id));
+    } catch (err) {
+      console.error('[Admin Verify Listing] Network error:', err);
+      setErrorMsg('Network error verifying listing.');
+    }
   };
 
   const handleDelete = async (id) => {
-    await fetch('/api/delete-listing', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    });
-    setListings(listings.filter(l => l.id !== id));
+    try {
+      const res = await fetch('/api/delete-listing', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        console.error('[Admin Delete Listing]', err);
+        setErrorMsg('Failed to delete listing.');
+        return;
+      }
+      setListings(listings.filter(l => l.id !== id));
+    } catch (err) {
+      console.error('[Admin Delete Listing] Network error:', err);
+      setErrorMsg('Network error deleting listing.');
+    }
   };
 
   if (!session || role !== 'admin') return null;
 
   return (
     <div className="max-w-4xl mx-auto py-12 px-4">
+      {errorMsg && (
+        <div className="mb-4 text-red-600 text-center">{errorMsg}</div>
+      )}
       <h1 className="text-3xl font-bold mb-8">Admin: Unverified Listings</h1>
       {loading ? (
         <div>Loading...</div>
