@@ -124,7 +124,7 @@ export async function getServerSideProps(context) {
     isAdmin = data?.role === 'admin';
   }
 
-  let query = supabase.from('listings').select('*').order('created_at', { ascending: false }).limit(3);
+  let query = supabase.from('listings').select('id, title, type, price, location, landmark, description, phone, image, user_id, verified, created_at').order('created_at', { ascending: false }).limit(3);
   if (!isAdmin) {
     query = query.eq('verified', true);
   }
