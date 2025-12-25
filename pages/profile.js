@@ -58,13 +58,26 @@ export default function ProfilePage({ session }) {
     if (avatarFile) {
       const ext = avatarFile.name.split('.').pop();
       const filePath = `avatars/${session.user.id}.${ext}`;
-      // Upload to Supabase Storage
+      // Remove existing file first (Supabase Storage upsert is not always reliable for same path)
+      await supabase.storage.from('avatars').remove([filePath]);
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, avatarFile, { upsert: true });
       if (uploadError) {
-        setAvatarError('Failed to upload avatar.');
-        return;
+        // If error is 'The resource already exists', try to remove and upload again
+        if (uploadError.message && uploadError.message.includes('already exists')) {
+          await supabase.storage.from('avatars').remove([filePath]);
+          const { error: retryError } = await supabase.storage
+            .from('avatars')
+            .upload(filePath, avatarFile, { upsert: true });
+          if (retryError) {
+            setAvatarError('Failed to upload avatar.');
+            return;
+          }
+        } else {
+          setAvatarError('Failed to upload avatar.');
+          return;
+        }
       }
       // Get public URL
       const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
