@@ -2,7 +2,23 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['ogjsblupoteatefyizgn.supabase.co', 'images.unsplash.com', 'plus.unsplash.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'ogjsblupoteatefyizgn.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'plus.unsplash.com',
+        pathname: '/**',
+      },
+    ],
   },
 };
 
