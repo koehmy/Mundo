@@ -39,18 +39,22 @@ export default function AdminPage({ session }) {
 
   useEffect(() => {
     if (role === 'admin') {
-      supabase
-        .from('listings')
-        .select('id, title, user_id, created_at, verified, image, location, landmark, description')
-        .eq('verified', false)
-        .then(({ data, error }) => {
-          if (error) {
-            console.error('[Admin Dashboard] Error fetching unverified listings:', error);
+      fetch('/api/admin/unverified-listings')
+        .then(async (res) => {
+          if (!res.ok) {
+            const err = await res.json();
+            console.error('[Admin Dashboard] Error fetching unverified listings:', err);
             setErrorMsg('Failed to load unverified listings.');
             setLoading(false);
             return;
           }
-          setListings(data || []);
+          const { listings } = await res.json();
+          setListings(listings || []);
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error('[Admin Dashboard] Network error fetching unverified listings:', err);
+          setErrorMsg('Network error loading unverified listings.');
           setLoading(false);
         });
     }
