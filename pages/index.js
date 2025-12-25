@@ -104,12 +104,31 @@ export default function Home({ featuredListings, session }) {
 }
 
 // Server-side fetch for SEO and Performance
-export async function getServerSideProps() {
-  const { data: featuredListings } = await supabase
-    .from('listings')
-    .select('*')
-    .limit(3)
-    .order('created_at', { ascending: false });
+export async function getServerSideProps(context) {
+  // Get session from cookies (SSR)
+  let user = null;
+  const { req } = context;
+  const access_token = req.cookies['sb-access-token'];
+  if (access_token) {
+    const { data } = await supabase.auth.getUser(access_token);
+    user = data?.user;
+  }
+
+  let isAdmin = false;
+  if (user) {
+    const { data } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    isAdmin = data?.role === 'admin';
+  }
+
+  let query = supabase.from('listings').select('*').order('created_at', { ascending: false }).limit(3);
+  if (!isAdmin) {
+    query = query.eq('verified', true);
+  }
+  const { data: featuredListings } = await query;
 
   return {
     props: {

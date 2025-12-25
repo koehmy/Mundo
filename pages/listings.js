@@ -73,11 +73,31 @@ export default function ListingsPage({ initialListings, session }) {
   );
 }
 
-export async function getServerSideProps() {
-  const { data: initialListings } = await supabase
-    .from('listings')
-    .select('*')
-    .order('created_at', { ascending: false });
+export async function getServerSideProps(context) {
+  // Get session from cookies (SSR)
+  let user = null;
+  const { req } = context;
+  const access_token = req.cookies['sb-access-token'];
+  if (access_token) {
+    const { data } = await supabase.auth.getUser(access_token);
+    user = data?.user;
+  }
+
+  let isAdmin = false;
+  if (user) {
+    const { data } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    isAdmin = data?.role === 'admin';
+  }
+
+  let query = supabase.from('listings').select('*').order('created_at', { ascending: false });
+  if (!isAdmin) {
+    query = query.eq('verified', true);
+  }
+  const { data: initialListings } = await query;
 
   return {
     props: {
