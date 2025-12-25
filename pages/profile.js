@@ -14,7 +14,7 @@ export default function ProfilePage({ session }) {
   const [profile, setProfile] = useState(null);
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editData, setEditData] = useState({ display_name: '', avatar_url: '' });
+  const [editData, setEditData] = useState({ full_name: '', username: '', avatar_url: '' });
   const [editStatus, setEditStatus] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
@@ -28,22 +28,29 @@ export default function ProfilePage({ session }) {
     // Fetch profile
     supabase
       .from('profiles')
-      .select('display_name, avatar_url')
+      .select('full_name, username, avatar_url')
       .eq('id', session.user.id)
       .single()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('[Profiles] Error fetching profile:', error.message);
+        }
         setProfile(data);
         setEditData({
-          display_name: data?.display_name || '',
+          full_name: data?.full_name || '',
+          username: data?.username || '',
           avatar_url: data?.avatar_url || '',
         });
       });
     // Fetch user's listings
     supabase
       .from('listings')
-      .select('*')
+      .select('id, title, type, price, location, landmark, description, phone, image, user_id, verified, created_at')
       .eq('user_id', session.user.id)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('[Listings] Error fetching listings:', error.message);
+        }
         setListings(data || []);
         setLoading(false);
       });
@@ -57,31 +64,48 @@ export default function ProfilePage({ session }) {
     // If a new avatar file is selected, upload it
     if (avatarFile) {
       const ext = avatarFile.name.split('.').pop();
-      const filePath = `avatars/${session.user.id}.${ext}`;
-      // Remove existing file first (Supabase Storage upsert is not always reliable for same path)
-      await supabase.storage.from('avatars').remove([filePath]);
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, avatarFile, { upsert: true });
-      if (uploadError) {
-        // If error is 'The resource already exists', try to remove and upload again
-        if (uploadError.message && uploadError.message.includes('already exists')) {
-          await supabase.storage.from('avatars').remove([filePath]);
-          const { error: retryError } = await supabase.storage
-            .from('avatars')
-            .upload(filePath, avatarFile, { upsert: true });
-          if (retryError) {
+      const filePath = `${session.user.id}.${ext}`;
+      try {
+        // Remove existing file first (Supabase Storage upsert is not always reliable for same path)
+        const { error: removeError } = await supabase.storage.from('avatars').remove([filePath]);
+        if (removeError) {
+          console.error('[Storage] Error removing old avatar:', removeError.message);
+        }
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, avatarFile, { upsert: true });
+        if (uploadError) {
+          // If error is 'The resource already exists', try to remove and upload again
+          if (uploadError.message && uploadError.message.includes('already exists')) {
+            const { error: retryRemoveError } = await supabase.storage.from('avatars').remove([filePath]);
+            if (retryRemoveError) {
+              console.error('[Storage] Error removing avatar for retry:', retryRemoveError.message);
+            }
+            const { error: retryError } = await supabase.storage
+              .from('avatars')
+              .upload(filePath, avatarFile, { upsert: true });
+            if (retryError) {
+              setAvatarError('Failed to upload avatar.');
+              console.error('[Storage] Avatar upload retry error:', retryError.message);
+              return;
+            }
+          } else {
             setAvatarError('Failed to upload avatar.');
+            console.error('[Storage] Avatar upload error:', uploadError.message);
             return;
           }
-        } else {
-          setAvatarError('Failed to upload avatar.');
-          return;
         }
+        // Get public URL
+        const { data, error: urlError } = supabase.storage.from('avatars').getPublicUrl(filePath);
+        if (urlError) {
+          console.error('[Storage] Error getting public URL:', urlError.message);
+        }
+        avatarUrl = data.publicUrl;
+      } catch (err) {
+        setAvatarError('Unexpected error during avatar upload.');
+        console.error('[Storage] Unexpected avatar upload error:', err);
+        return;
       }
-      // Get public URL
-      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
-      avatarUrl = data.publicUrl;
     }
     // Clear preview after submit
     setAvatarPreview(null);
@@ -90,12 +114,14 @@ export default function ProfilePage({ session }) {
     const { error } = await supabase
       .from('profiles')
       .update({
-        display_name: editData.display_name,
+        full_name: editData.full_name,
+        username: editData.username,
         avatar_url: avatarUrl,
       })
       .eq('id', session.user.id);
     if (error) {
       setEditStatus('error');
+      console.error('[Profiles] Profile update error:', error.message);
     } else {
       setEditStatus('success');
       setProfile({ ...profile, ...editData, avatar_url: avatarUrl });
@@ -114,17 +140,18 @@ export default function ProfilePage({ session }) {
               <img
                 src={profile.avatar_url}
                 alt="Avatar"
-                className="w-24 h-24 rounded-full border-4 border-white object-cover"
+                className="w-24 h-24 rounded-full border-4 border-white object-cover bg-emerald-100"
+                onError={e => { e.target.onerror = null; e.target.src = '/file.svg'; }}
               />
             ) : (
               <div className="w-24 h-24 bg-emerald-100 rounded-full border-4 border-white flex items-center justify-center text-3xl font-serif font-bold text-emerald-900">
-                {session.user.email[0].toUpperCase()}
+                {profile?.full_name?.[0]?.toUpperCase() || profile?.username?.[0]?.toUpperCase() || session.user.email[0].toUpperCase()}
               </div>
             )}
           </div>
         </div>
         <div className="pt-14 pb-8 px-8">
-          <h1 className="text-2xl font-serif font-bold text-stone-900">{session.user.email}</h1>
+          <h1 className="text-2xl font-serif font-bold text-stone-900">{profile?.full_name || profile?.username || 'User'}</h1>
           <p className="text-stone-500 flex items-center gap-2 mt-1">
             <CheckCircle size={16} className="text-emerald-600" /> Verified Member
           </p>
@@ -134,12 +161,21 @@ export default function ProfilePage({ session }) {
             <h2 className="text-lg font-bold text-stone-900 mb-4">Edit Profile</h2>
             <form className="space-y-4 max-w-md" onSubmit={handleEditSubmit}>
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">Display Name</label>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Full Name</label>
                 <input
                   type="text"
                   className="w-full px-4 py-3 rounded-lg border border-stone-200 focus:ring-2 focus:ring-emerald-900/20 focus:border-emerald-900 outline-none"
-                  value={editData.display_name}
-                  onChange={e => setEditData({ ...editData, display_name: e.target.value })}
+                  value={editData.full_name}
+                  onChange={e => setEditData({ ...editData, full_name: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Username</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 rounded-lg border border-stone-200 focus:ring-2 focus:ring-emerald-900/20 focus:border-emerald-900 outline-none"
+                  value={editData.username}
+                  onChange={e => setEditData({ ...editData, username: e.target.value })}
                 />
               </div>
               <div>
