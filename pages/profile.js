@@ -28,7 +28,7 @@ export default function ProfilePage({ session }) {
     // Fetch profile
     supabase
       .from('profiles')
-      .select('full_name, username, avatar_url')
+      .select('full_name, username, avatar_url, verified')
       .eq('id', session.user.id)
       .single()
       .then(({ data, error }) => {
@@ -163,7 +163,15 @@ export default function ProfilePage({ session }) {
         <div className="pt-14 pb-8 px-8">
           <h1 className="text-2xl font-serif font-bold text-stone-900">{profile?.full_name || profile?.username || 'User'}</h1>
           <p className="text-stone-500 flex items-center gap-2 mt-1">
-            <CheckCircle size={16} className="text-emerald-600" /> Verified Member
+            {profile?.verified ? (
+              <>
+                <CheckCircle size={16} className="text-emerald-600" /> Verified Member
+              </>
+            ) : (
+              <>
+                <span className="inline-block w-4 h-4 rounded-full bg-stone-400 mr-1 align-middle" title="Unverified" /> Unverified Member
+              </>
+            )}
           </p>
 
           {/* Profile Edit Form */}
