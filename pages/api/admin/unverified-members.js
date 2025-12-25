@@ -1,7 +1,7 @@
 // File: pages/api/admin/unverified-members.js
 // Returns all unverified members for admin dashboard (server-side, with auth context)
 
-import { supabase } from '../../../lib/supabaseClient';
+import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -9,30 +9,32 @@ export default async function handler(req, res) {
   }
 
   // Get session (server-side)
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError || !session) {
+  // Extract user from session (e.g., cookie, header, etc.)
+  const access_token = req.cookies['sb-access-token'];
+  if (!access_token) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-
+  // Get user id from JWT
+  const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(access_token);
+  if (userError || !user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
   // Check admin role
-  const { data: profile, error: profileError } = await supabase
+  const { data: profile, error: profileError } = await supabaseAdmin
     .from('profiles')
     .select('role')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single();
   if (profileError || !profile || profile.role !== 'admin') {
     return res.status(403).json({ error: 'Forbidden' });
   }
-
-  // Fetch all unverified members
-  const { data: members, error: membersError } = await supabase
+  // Fetch all unverified members (service role bypasses RLS)
+  const { data: members, error: membersError } = await supabaseAdmin
     .from('profiles')
     .select('id, email, full_name, username, verified, created_at')
     .eq('verified', false);
-
   if (membersError) {
     return res.status(500).json({ error: 'Failed to fetch members' });
   }
-
   res.status(200).json({ members });
 }

@@ -1,7 +1,7 @@
 // File: pages/api/admin/unverified-listings.js
 // Returns all unverified listings for admin dashboard (server-side, with auth context)
 
-import { supabase } from '../../../lib/supabaseClient';
+import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 
 export default async function handler(req, res) {
   // Only allow GET
@@ -10,30 +10,33 @@ export default async function handler(req, res) {
   }
 
   // Get session (server-side)
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError || !session) {
+  // Extract user from session (e.g., cookie, header, etc.)
+  // This example assumes a cookie-based session, adapt as needed
+  const access_token = req.cookies['sb-access-token'];
+  if (!access_token) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-
+  // Get user id from JWT
+  const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(access_token);
+  if (userError || !user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
   // Check admin role
-  const { data: profile, error: profileError } = await supabase
+  const { data: profile, error: profileError } = await supabaseAdmin
     .from('profiles')
     .select('role')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single();
   if (profileError || !profile || profile.role !== 'admin') {
     return res.status(403).json({ error: 'Forbidden' });
   }
-
-  // Fetch all unverified listings
-  const { data: listings, error: listingsError } = await supabase
+  // Fetch all unverified listings (service role bypasses RLS)
+  const { data: listings, error: listingsError } = await supabaseAdmin
     .from('listings')
     .select('id, title, user_id, created_at, verified, image, location, landmark, description')
     .eq('verified', false);
-
   if (listingsError) {
     return res.status(500).json({ error: 'Failed to fetch listings' });
   }
-
   res.status(200).json({ listings });
 }
