@@ -24,6 +24,11 @@ const nextConfig = {
     locales: ['en', 'es', 'fr'],
     defaultLocale: 'es',
   },
+  experimental: {
+    turbo: {
+      enabled: false,
+    },
+  },
 };
 
 module.exports = nextConfig;
