@@ -3,6 +3,7 @@
 
 import Image from 'next/image';
 import { MapPin, ShieldCheck, MessageCircle, Trash2 } from 'lucide-react';
+import { useTranslation } from 'next-i18next';
 
 const ListingCard = ({ item, session }) => (
   <div className="group relative bg-white border border-stone-100 rounded-xl overflow-hidden hover:shadow-2xl hover:shadow-stone-200 transition-all duration-500 ease-out cursor-pointer h-full flex flex-col">
@@ -25,8 +26,7 @@ const ListingCard = ({ item, session }) => (
         </span>
         {item.verified && (
           <span className="px-2 py-1 flex items-center gap-1 text-xs font-bold text-white bg-blue-600/90 backdrop-blur-md rounded-md">
-            <ShieldCheck size={12} />
-            Verified
+            <ShieldCheck size={12} /> {t('verified')}
           </span>
         )}
       </div>
@@ -56,7 +56,7 @@ const ListingCard = ({ item, session }) => (
       <div className="mt-auto flex items-center justify-between border-t border-stone-100 pt-4">
         <div className="flex flex-col">
           <span className="text-xs text-stone-400 uppercase tracking-wider">
-            {item.type === 'rental' ? 'Monthly' : 'Starting at'}
+            {item.type === 'rental' ? t('monthly') : t('startingAt')}
           </span>
           <span className="font-serif text-lg font-bold text-stone-900">
             ${Number(item.price).toLocaleString()} <span className="text-xs font-sans font-normal text-stone-500">MXN</span>
@@ -76,7 +76,7 @@ const ListingCard = ({ item, session }) => (
             <MessageCircle size={20} />
           </button>
           
-          {session && (session.user.id === item.user_id || session.user.email.includes('admin')) && (
+          {session && session.user.id === item.user_id && (
             <button
               onClick={(e) => {
                 e.stopPropagation();

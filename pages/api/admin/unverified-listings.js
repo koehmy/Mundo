@@ -30,13 +30,20 @@ export default async function handler(req, res) {
   if (profileError || !profile || profile.role !== 'admin') {
     return res.status(403).json({ error: 'Forbidden' });
   }
-  // Fetch all unverified listings (service role bypasses RLS)
-  const { data: listings, error: listingsError } = await supabaseAdmin
+  // Pagination params
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  // Fetch paginated unverified listings (service role bypasses RLS)
+  const { data: listings, error: listingsError, count } = await supabaseAdmin
     .from('listings')
-    .select('id, title, user_id, created_at, verified, image, location, landmark, description')
-    .eq('verified', false);
+    .select('id, title, user_id, created_at, verified, image, location, landmark, description', { count: 'exact' })
+    .eq('verified', false)
+    .range(from, to);
   if (listingsError) {
     return res.status(500).json({ error: 'Failed to fetch listings' });
   }
-  res.status(200).json({ listings });
+  res.status(200).json({ listings, count });
 }

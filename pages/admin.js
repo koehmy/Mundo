@@ -2,92 +2,66 @@
 // Task: Admin dashboard for verifying listings
 
 
+
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { supabase } from '../lib/supabaseClient';
 
-export default function AdminPage({ session }) {
   const router = useRouter();
-  const [role, setRole] = useState(null);
   const [listings, setListings] = useState([]);
+  const [listingsCount, setListingsCount] = useState(0);
+  const [listingsPage, setListingsPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
-  const [checking, setChecking] = useState(true);
-
-  // Unverified members state
   const [members, setMembers] = useState([]);
+  const [membersCount, setMembersCount] = useState(0);
+  const [membersPage, setMembersPage] = useState(1);
   const [membersLoading, setMembersLoading] = useState(true);
 
   useEffect(() => {
     if (!session) {
       router.replace('/login');
-      setChecking(false);
       return;
     }
-    // Fetch user role from profiles
-    supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single()
-      .then(({ data, error }) => {
-        if (error) {
-          console.error('[Admin Dashboard] Role fetch failed', error);
-          setErrorMsg('Failed to load admin role.');
-          setChecking(false);
+    setLoading(true);
+    fetch(`/api/admin/unverified-listings?page=${listingsPage}&limit=10`)
+      .then(async (res) => {
+        const json = await res.json();
+        if (!res.ok) {
+          setErrorMsg(json.error || 'Failed to load unverified listings.');
+          setLoading(false);
           return;
         }
-        if (!data || data.role !== 'admin') {
-          router.replace('/');
-        } else {
-          setRole('admin');
-        }
-        setChecking(false);
+        setListings(json.listings || []);
+        setListingsCount(json.count || 0);
+        setLoading(false);
+      })
+      .catch(() => {
+        setErrorMsg('Network error loading unverified listings.');
+        setLoading(false);
       });
-  }, [session, router]);
+  }, [session, router, listingsPage]);
 
   useEffect(() => {
-    if (role === 'admin') {
-      fetch('/api/admin/unverified-listings')
-        .then(async (res) => {
-          if (!res.ok) {
-            const err = await res.json();
-            console.error('[Admin Dashboard] Error fetching unverified listings:', err);
-            setErrorMsg('Failed to load unverified listings.');
-            setLoading(false);
-            return;
-          }
-          const { listings } = await res.json();
-          setListings(listings || []);
-          setLoading(false);
-        })
-        .catch((err) => {
-          console.error('[Admin Dashboard] Network error fetching unverified listings:', err);
-          setErrorMsg('Network error loading unverified listings.');
-          setLoading(false);
-        });
+    if (!session) return;
+    setMembersLoading(true);
+    fetch(`/api/admin/unverified-members?page=${membersPage}&limit=10`)
+      .then(async (res) => {
+        const json = await res.json();
+        if (!res.ok) {
+          setErrorMsg(json.error || 'Failed to load unverified members.');
+          setMembersLoading(false);
+          return;
+        }
+        setMembers(json.members || []);
+        setMembersCount(json.count || 0);
+        setMembersLoading(false);
+      })
+      .catch(() => {
+        setErrorMsg('Network error loading unverified members.');
+        setMembersLoading(false);
+      });
+  }, [session, membersPage]);
 
-      // Fetch unverified members
-      fetch('/api/admin/unverified-members')
-        .then(async (res) => {
-          if (!res.ok) {
-            const err = await res.json();
-            console.error('[Admin Dashboard] Error fetching unverified members:', err);
-            setErrorMsg('Failed to load unverified members.');
-            setMembersLoading(false);
-            return;
-          }
-          const { members } = await res.json();
-          setMembers(members || []);
-          setMembersLoading(false);
-        })
-        .catch((err) => {
-          console.error('[Admin Dashboard] Network error fetching unverified members:', err);
-          setErrorMsg('Network error loading unverified members.');
-          setMembersLoading(false);
-        });
-    }
-  }, [role]);
 
   const handleVerify = async (id) => {
     try {
@@ -97,14 +71,11 @@ export default function AdminPage({ session }) {
         body: JSON.stringify({ id }),
       });
       if (!res.ok) {
-        const err = await res.json();
-        console.error('[Admin Verify Listing]', err);
         setErrorMsg('Failed to verify listing.');
         return;
       }
       setListings(listings.filter(l => l.id !== id));
-    } catch (err) {
-      console.error('[Admin Verify Listing] Network error:', err);
+    } catch {
       setErrorMsg('Network error verifying listing.');
     }
   };
@@ -117,19 +88,15 @@ export default function AdminPage({ session }) {
         body: JSON.stringify({ id }),
       });
       if (!res.ok) {
-        const err = await res.json();
-        console.error('[Admin Delete Listing]', err);
         setErrorMsg('Failed to delete listing.');
         return;
       }
       setListings(listings.filter(l => l.id !== id));
-    } catch (err) {
-      console.error('[Admin Delete Listing] Network error:', err);
+    } catch {
       setErrorMsg('Network error deleting listing.');
     }
   };
 
-  // Handle member verification
   const handleVerifyMember = async (user_id) => {
     try {
       const res = await fetch('/api/verify-member', {
@@ -138,20 +105,16 @@ export default function AdminPage({ session }) {
         body: JSON.stringify({ user_id }),
       });
       if (!res.ok) {
-        const err = await res.json();
-        console.error('[Admin Verify Member]', err);
         setErrorMsg('Failed to verify member.');
         return;
       }
       setMembers(members.filter(m => m.id !== user_id));
-    } catch (err) {
-      console.error('[Admin Verify Member] Network error:', err);
+    } catch {
       setErrorMsg('Network error verifying member.');
     }
   };
 
-  if (checking) return <div>Loading admin…</div>;
-  if (!session || role !== 'admin') return null;
+  if (!session) return null;
 
   return (
     <div className="max-w-4xl mx-auto py-12 px-4">
@@ -159,11 +122,13 @@ export default function AdminPage({ session }) {
         <div className="mb-4 text-red-600 text-center">{errorMsg}</div>
       )}
       <h1 className="text-3xl font-bold mb-8">Admin: Unverified Listings</h1>
+      <div className="mb-2 text-sm text-stone-500">{listingsCount} total</div>
       {loading ? (
         <div>Loading...</div>
       ) : listings.length === 0 ? (
         <div className="text-stone-500">No unverified listings.</div>
       ) : (
+        <>
         <div className="space-y-8">
           {listings.map(listing => (
             <div key={listing.id} className="bg-white rounded-xl shadow p-6 flex gap-6 items-center">
@@ -180,14 +145,23 @@ export default function AdminPage({ session }) {
             </div>
           ))}
         </div>
+        {/* Pagination controls */}
+        <div className="flex justify-center gap-4 mt-6">
+          <button disabled={listingsPage === 1} onClick={() => setListingsPage(listingsPage - 1)} className="px-3 py-1 rounded bg-stone-100 disabled:opacity-50">Prev</button>
+          <span>Page {listingsPage} of {Math.ceil(listingsCount / 10) || 1}</span>
+          <button disabled={listingsPage >= Math.ceil(listingsCount / 10)} onClick={() => setListingsPage(listingsPage + 1)} className="px-3 py-1 rounded bg-stone-100 disabled:opacity-50">Next</button>
+        </div>
+        </>
       )}
 
       <h1 className="text-3xl font-bold mt-16 mb-8">Admin: Unverified Members</h1>
+      <div className="mb-2 text-sm text-stone-500">{membersCount} total</div>
       {membersLoading ? (
         <div>Loading...</div>
       ) : members.length === 0 ? (
         <div className="text-stone-500">No unverified members.</div>
       ) : (
+        <>
         <div className="space-y-8">
           {members.map(member => (
             <div key={member.id} className="bg-white rounded-xl shadow p-6 flex gap-6 items-center">
@@ -202,6 +176,13 @@ export default function AdminPage({ session }) {
             </div>
           ))}
         </div>
+        {/* Pagination controls */}
+        <div className="flex justify-center gap-4 mt-6">
+          <button disabled={membersPage === 1} onClick={() => setMembersPage(membersPage - 1)} className="px-3 py-1 rounded bg-stone-100 disabled:opacity-50">Prev</button>
+          <span>Page {membersPage} of {Math.ceil(membersCount / 10) || 1}</span>
+          <button disabled={membersPage >= Math.ceil(membersCount / 10)} onClick={() => setMembersPage(membersPage + 1)} className="px-3 py-1 rounded bg-stone-100 disabled:opacity-50">Next</button>
+        </div>
+        </>
       )}
     </div>
   );

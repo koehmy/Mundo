@@ -28,13 +28,20 @@ export default async function handler(req, res) {
   if (profileError || !profile || profile.role !== 'admin') {
     return res.status(403).json({ error: 'Forbidden' });
   }
-  // Fetch all unverified members (service role bypasses RLS)
-  const { data: members, error: membersError } = await supabaseAdmin
+  // Pagination params
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = Math.min(parseInt(req.query.limit, 10) || 20, 100);
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  // Fetch paginated unverified members (service role bypasses RLS)
+  const { data: members, error: membersError, count } = await supabaseAdmin
     .from('profiles')
-    .select('id, email, full_name, username, verified, created_at')
-    .eq('verified', false);
+    .select('id, email, full_name, username, verified, created_at', { count: 'exact' })
+    .eq('verified', false)
+    .range(from, to);
   if (membersError) {
     return res.status(500).json({ error: 'Failed to fetch members' });
   }
-  res.status(200).json({ members });
+  res.status(200).json({ members, count });
 }

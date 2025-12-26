@@ -5,6 +5,7 @@ import '../styles/globals.css';
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { supabase } from '../lib/supabaseClient';
+import { appWithTranslation } from '../lib/i18n';
 
 function MyApp({ Component, pageProps }) {
   const [session, setSession] = useState(null);
@@ -47,4 +48,4 @@ function MyApp({ Component, pageProps }) {
   );
 }
 
-export default MyApp;
+export default appWithTranslation(MyApp);
