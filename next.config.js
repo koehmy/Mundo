@@ -24,5 +24,6 @@ const nextConfig = {
     locales: ['en', 'es', 'fr'],
     defaultLocale: 'es',
   },
+};
 
-export default nextConfig;
+module.exports = nextConfig;
