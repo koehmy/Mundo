@@ -1,11 +1,7 @@
-// File: pages/admin.js
-// Task: Admin dashboard for verifying listings
-
-
-
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 
+export default function AdminDashboard({ session }) {
   const router = useRouter();
   const [listings, setListings] = useState([]);
   const [listingsCount, setListingsCount] = useState(0);
@@ -61,7 +57,6 @@ import { useRouter } from 'next/router';
         setMembersLoading(false);
       });
   }, [session, membersPage]);
-
 
   const handleVerify = async (id) => {
     try {
