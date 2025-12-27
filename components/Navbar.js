@@ -20,14 +20,14 @@ const NavLink = ({ href, labelKey, icon: Icon, router, onClick }) => {
       }`}
     >
       {Icon && <Icon size={16} />}
-      <span className="font-medium tracking-wide text-sm uppercase">{t(labelKey)}</span>
+      <span className="font-medium tracking-wide text-sm uppercase">{labelKey}</span>
     </Link>
   );
 };
 const Navbar = ({ session }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
-  const t = useTranslations();
+
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -43,7 +43,7 @@ const Navbar = ({ session }) => {
             <div className="w-8 h-8 bg-emerald-900 rounded-full flex items-center justify-center text-white font-serif font-bold text-xl group-hover:bg-emerald-800 transition-colors">
               M
             </div>
-            <span className="font-serif text-xl font-bold text-stone-900 tracking-tight">{t('brand')}</span>
+            <span className="font-serif text-xl font-bold text-stone-900 tracking-tight">Mundo Cerca</span>
           </Link>
 
           {/* Desktop Nav */}
