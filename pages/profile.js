@@ -169,6 +169,7 @@ export default function ProfilePage({ session }) {
             )}
           </div>
         </div>
+
         <div className="pt-14 pb-8 px-8">
           <h1 className="text-2xl font-serif font-bold text-stone-900">{profile?.full_name || profile?.username || 'User'}</h1>
           <p className="text-stone-500 flex items-center gap-2 mt-1">
@@ -182,6 +183,11 @@ export default function ProfilePage({ session }) {
               </>
             )}
           </p>
+          {profile?.role === 'admin' && (
+            <div className="mt-4">
+              <a href="/admin" className="inline-block px-4 py-2 bg-emerald-900 text-white rounded-lg font-medium hover:bg-emerald-800 transition-colors">Admin Dashboard</a>
+            </div>
+          )}
 
           {/* Profile Edit Form */}
           <div className="mt-8 pt-8 border-t border-stone-100">
