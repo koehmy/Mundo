@@ -9,6 +9,11 @@ import { CheckCircle } from 'lucide-react';
 
 import ListingCard from '../components/ListingCard';
 
+// Prevent static prerendering: always SSR
+export async function getServerSideProps(context) {
+  return { props: {} };
+}
+
 // FIX: All hooks and logic must be inside the component function, not at the top level.
 export default function ProfilePage({ session }) {
   const router = useRouter();

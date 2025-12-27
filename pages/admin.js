@@ -2,6 +2,11 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 
+// Prevent static prerendering: always SSR
+export async function getServerSideProps(context) {
+  return { props: {} };
+}
+
 export default function AdminDashboard({ session }) {
   const router = useRouter();
   const [listings, setListings] = useState([]);
