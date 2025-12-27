@@ -3,10 +3,8 @@
 
 import Image from 'next/image';
 import { MapPin, ShieldCheck, MessageCircle, Trash2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 const ListingCard = ({ item, session }) => {
-  const t = useTranslations();
   return (
     <div className="group relative bg-white border border-stone-100 rounded-xl overflow-hidden hover:shadow-2xl hover:shadow-stone-200 transition-all duration-500 ease-out cursor-pointer h-full flex flex-col">
     {/* Image container */}
@@ -28,7 +26,7 @@ const ListingCard = ({ item, session }) => {
         </span>
         {item.verified && (
           <span className="px-2 py-1 flex items-center gap-1 text-xs font-bold text-white bg-blue-600/90 backdrop-blur-md rounded-md">
-            <ShieldCheck size={12} /> {t('verified')}
+            <ShieldCheck size={12} /> Verified
           </span>
         )}
       </div>
@@ -58,7 +56,7 @@ const ListingCard = ({ item, session }) => {
       <div className="mt-auto flex items-center justify-between border-t border-stone-100 pt-4">
         <div className="flex flex-col">
           <span className="text-xs text-stone-400 uppercase tracking-wider">
-            {item.type === 'rental' ? t('monthly') : t('startingAt')}
+            {item.type === 'rental' ? 'Monthly' : 'Starting at'}
           </span>
           <span className="font-serif text-lg font-bold text-stone-900">
             ${Number(item.price).toLocaleString()} <span className="text-xs font-sans font-normal text-stone-500">MXN</span>
