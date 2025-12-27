@@ -28,10 +28,10 @@ export default function MiniLoginButton() {
       setLoading(false);
       return;
     }
-    // Fetch latest profile/role
+    // Fetch latest profile/role and admin_verified
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, admin_verified')
       .eq('id', user.id)
       .single();
     if (profileError) {
@@ -39,7 +39,7 @@ export default function MiniLoginButton() {
       setLoading(false);
       return;
     }
-    if (profile.role === 'admin') {
+    if (profile.role === 'admin' && profile.admin_verified === true) {
       router.push('/admin');
     } else {
       router.push('/');
