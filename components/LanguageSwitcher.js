@@ -1,10 +1,11 @@
 import { useRouter } from 'next/router';
-import { useTranslation } from 'next-i18next';
+import { useRouter } from 'next/router';
+import { useTranslations } from 'next-intl';
 
 const LanguageSwitcher = () => {
   const router = useRouter();
-  const { i18n } = useTranslation();
   const { locale, locales, asPath } = router;
+  const t = useTranslations();
 
   const handleChange = (e) => {
     const newLocale = e.target.value;
@@ -20,7 +21,7 @@ const LanguageSwitcher = () => {
     >
       {locales.map((loc) => (
         <option key={loc} value={loc}>
-          {i18n.getFixedT(loc)('languageName')}
+          {t('languageName', {}, {locale: loc})}
         </option>
       ))}
     </select>

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronRight, ShieldCheck, MapPin, MessageCircle } from 'lucide-react';
 import ListingCard from '../components/ListingCard';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import { supabase } from '../lib/supabaseClient';
 
 export default function Home({ featuredListings, session, errorMsg }) {
@@ -27,6 +28,9 @@ export default function Home({ featuredListings, session, errorMsg }) {
         </div>
 
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+          <div className="flex justify-end w-full mb-4">
+            <LanguageSwitcher />
+          </div>
           <span className="inline-block py-1 px-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-medium tracking-[0.2em] uppercase mb-6">
             Local Marketplace
           </span>

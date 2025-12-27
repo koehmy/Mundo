@@ -3,10 +3,12 @@
 
 import Image from 'next/image';
 import { MapPin, ShieldCheck, MessageCircle, Trash2 } from 'lucide-react';
-import { useTranslation } from 'next-i18next';
+import { useTranslations } from 'next-intl';
 
-const ListingCard = ({ item, session }) => (
-  <div className="group relative bg-white border border-stone-100 rounded-xl overflow-hidden hover:shadow-2xl hover:shadow-stone-200 transition-all duration-500 ease-out cursor-pointer h-full flex flex-col">
+const ListingCard = ({ item, session }) => {
+  const t = useTranslations();
+  return (
+    <div className="group relative bg-white border border-stone-100 rounded-xl overflow-hidden hover:shadow-2xl hover:shadow-stone-200 transition-all duration-500 ease-out cursor-pointer h-full flex flex-col">
     {/* Image container */}
     <div className="relative aspect-[4/3] overflow-hidden bg-stone-200">
       <Image
@@ -98,6 +100,7 @@ const ListingCard = ({ item, session }) => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 export default ListingCard;

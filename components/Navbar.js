@@ -6,11 +6,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Menu, X, Search, PlusCircle, User, LogOut } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
-import { useTranslation } from 'next-i18next';
+import { useTranslations } from 'next-intl';
 import LanguageSwitcher from './LanguageSwitcher';
 
 const NavLink = ({ href, labelKey, icon: Icon, router, onClick }) => {
-  const { t } = useTranslation('common');
+  const t = useTranslations();
   return (
     <Link
       href={href}
@@ -39,7 +39,7 @@ const Navbar = ({ session }) => {
 const Navbar = ({ session }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
-  const { t } = useTranslation('common');
+  const t = useTranslations();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -125,4 +125,4 @@ const Navbar = ({ session }) => {
       {/* ...existing code... */}
     </nav>
   );
-};
+}
