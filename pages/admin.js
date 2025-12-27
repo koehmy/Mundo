@@ -18,9 +18,10 @@ export default function AdminDashboard({ session }) {
       router.replace('/login');
       return;
     }
-    setLoading(true);
-    fetch(`/api/admin/unverified-listings?page=${listingsPage}&limit=10`)
-      .then(async (res) => {
+    const fetchListings = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/admin/unverified-listings?page=${listingsPage}&limit=10`);
         const json = await res.json();
         if (!res.ok) {
           setErrorMsg(json.error || 'Failed to load unverified listings.');
@@ -30,18 +31,20 @@ export default function AdminDashboard({ session }) {
         setListings(json.listings || []);
         setListingsCount(json.count || 0);
         setLoading(false);
-      })
-      .catch(() => {
+      } catch {
         setErrorMsg('Network error loading unverified listings.');
         setLoading(false);
-      });
+      }
+    };
+    fetchListings();
   }, [session, router, listingsPage]);
 
   useEffect(() => {
     if (!session) return;
-    setMembersLoading(true);
-    fetch(`/api/admin/unverified-members?page=${membersPage}&limit=10`)
-      .then(async (res) => {
+    const fetchMembers = async () => {
+      setMembersLoading(true);
+      try {
+        const res = await fetch(`/api/admin/unverified-members?page=${membersPage}&limit=10`);
         const json = await res.json();
         if (!res.ok) {
           setErrorMsg(json.error || 'Failed to load unverified members.');
@@ -51,11 +54,12 @@ export default function AdminDashboard({ session }) {
         setMembers(json.members || []);
         setMembersCount(json.count || 0);
         setMembersLoading(false);
-      })
-      .catch(() => {
+      } catch {
         setErrorMsg('Network error loading unverified members.');
         setMembersLoading(false);
-      });
+      }
+    };
+    fetchMembers();
   }, [session, membersPage]);
 
   const handleVerify = async (id) => {

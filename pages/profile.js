@@ -147,11 +147,14 @@ export default function ProfilePage({ session }) {
         <div className="h-32 bg-stone-900 relative">
           <div className="absolute -bottom-10 left-8">
             {profile?.avatar_url ? (
-              <img
+              <Image
                 src={profile.avatar_url}
                 alt="Avatar"
+                width={96}
+                height={96}
                 className="w-24 h-24 rounded-full border-4 border-white object-cover bg-emerald-100"
-                onError={e => { e.target.onerror = null; e.target.src = '/file.svg'; }}
+                onError={(e) => { e.target.onerror = null; e.target.src = '/file.svg'; }}
+                unoptimized
               />
             ) : (
               <div className="w-24 h-24 bg-emerald-100 rounded-full border-4 border-white flex items-center justify-center text-3xl font-serif font-bold text-emerald-900">

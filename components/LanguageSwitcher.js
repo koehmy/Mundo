@@ -1,5 +1,4 @@
 import { useRouter } from 'next/router';
-import { useRouter } from 'next/router';
 import { useTranslations } from 'next-intl';
 
 const LanguageSwitcher = () => {
