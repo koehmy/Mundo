@@ -1,41 +1,5 @@
 // File: components/Navbar.js
 // Task: Sticky, session-aware navbar. Shows Login/Signup or avatar + Logout.
-
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { Menu, X, Search, PlusCircle, User, LogOut } from 'lucide-react';
-import { supabase } from '../lib/supabaseClient';
-import { useTranslations } from 'next-intl';
-import LanguageSwitcher from './LanguageSwitcher';
-
-const NavLink = ({ href, labelKey, icon: Icon, router, onClick }) => {
-  const t = useTranslations();
-  return (
-    <Link
-      href={href}
-      onClick={onClick}
-      className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-300 ${
-        router.pathname === href 
-          ? 'text-emerald-900 bg-emerald-50' 
-          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
-      }`}
-    >
-      {Icon && <Icon size={16} />}
-      <span className="font-medium tracking-wide text-sm uppercase">{t(labelKey)}</span>
-    </Link>
-  );
-};
-
-const Navbar = ({ session }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
-  };
-
 const Navbar = ({ session }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
@@ -99,6 +63,35 @@ const Navbar = ({ session }) => {
               {session ? (
                 <>
                   <NavLink href="/create-listing" labelKey="createListing" icon={PlusCircle} router={router} onClick={() => setIsMenuOpen(false)} />
+                  <NavLink href="/profile" labelKey="myProfile" icon={User} router={router} onClick={() => setIsMenuOpen(false)} />
+                  <button 
+                    onClick={handleLogout}
+                    className="w-full text-left px-3 py-3 text-stone-500 hover:text-red-600 flex items-center space-x-2"
+                  >
+                    <LogOut size={16} />
+                    <span>{t('signOut')}</span>
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="w-full mt-4 block text-center bg-emerald-900 text-white py-3 rounded-lg font-medium"
+                >
+                  {t('loginSignup')}
+                </Link>
+              )}
+              <LanguageSwitcher />
+            </div>
+          </div>
+        )}
+      </div>
+      {/* ...existing code... */}
+    </nav>
+  );
+};
+
+export default Navbar;
                   <NavLink href="/profile" labelKey="myProfile" icon={User} router={router} onClick={() => setIsMenuOpen(false)} />
                   <button 
                     onClick={handleLogout}

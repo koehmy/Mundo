@@ -2,6 +2,7 @@
 // Task: Show user info. Protected route.
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { supabase } from '../lib/supabaseClient';
 import { useRouter } from 'next/router';
 import { CheckCircle } from 'lucide-react';
@@ -232,7 +233,14 @@ export default function ProfilePage({ session }) {
                 {avatarError && <div className="text-red-600 mt-2">{avatarError}</div>}
                 {avatarPreview && (
                   <div className="mt-2">
-                    <img src={avatarPreview} alt="Avatar Preview" className="w-24 h-24 rounded-full object-cover border" />
+                    <Image
+                      src={avatarPreview}
+                      alt="Avatar Preview"
+                      width={96}
+                      height={96}
+                      className="w-24 h-24 rounded-full object-cover border"
+                      unoptimized
+                    />
                   </div>
                 )}
               </div>

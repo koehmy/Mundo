@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 
 export default function AdminDashboard({ session }) {
@@ -131,7 +132,14 @@ export default function AdminDashboard({ session }) {
         <div className="space-y-8">
           {listings.map(listing => (
             <div key={listing.id} className="bg-white rounded-xl shadow p-6 flex gap-6 items-center">
-              <img src={listing.image} alt={listing.title} className="w-32 h-24 object-cover rounded-lg border" />
+              <Image
+                src={listing.image}
+                alt={listing.title}
+                width={128}
+                height={96}
+                className="w-32 h-24 object-cover rounded-lg border"
+                unoptimized
+              />
               <div className="flex-1">
                 <h2 className="text-xl font-bold mb-2">{listing.title}</h2>
                 <div className="text-stone-500 mb-1">{listing.location} &mdash; {listing.landmark}</div>
