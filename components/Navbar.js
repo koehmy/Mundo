@@ -37,12 +37,14 @@ const Navbar = ({ session }) => {
                 </button>
               </>
             ) : (
-              <Link
-                href="/login"
-                className="ml-4 px-5 py-2 bg-stone-900 text-stone-50 rounded-full text-sm font-medium hover:bg-emerald-900 transition-colors shadow-lg shadow-stone-200"
-              >
-                {t('login')}
-              </Link>
+              <>
+                <Link
+                  href="/login"
+                  className="ml-4 px-5 py-2 bg-stone-900 text-stone-50 rounded-full text-sm font-medium hover:bg-emerald-900 transition-colors shadow-lg shadow-stone-200"
+                >
+                  {t('login')}
+                </Link>
+              </>
             )}
             <LanguageSwitcher />
           </div>
@@ -73,13 +75,15 @@ const Navbar = ({ session }) => {
                   </button>
                 </>
               ) : (
-                <Link
-                  href="/login"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="w-full mt-4 block text-center bg-emerald-900 text-white py-3 rounded-lg font-medium"
-                >
-                  {t('loginSignup')}
-                </Link>
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-full mt-4 block text-center bg-emerald-900 text-white py-3 rounded-lg font-medium"
+                  >
+                    {t('loginSignup')}
+                  </Link>
+                </>
               )}
               <LanguageSwitcher />
             </div>
@@ -92,30 +96,3 @@ const Navbar = ({ session }) => {
 };
 
 export default Navbar;
-                  <NavLink href="/profile" labelKey="myProfile" icon={User} router={router} onClick={() => setIsMenuOpen(false)} />
-                  <button 
-                    onClick={handleLogout}
-                    className="w-full text-left px-3 py-3 text-stone-500 hover:text-red-600 flex items-center space-x-2"
-                  >
-                    <LogOut size={16} />
-                    <span>{t('signOut')}</span>
-                  </button>
-                </>
-              ) : (
-                <Link
-                  href="/login"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="w-full mt-4 block text-center bg-emerald-900 text-white py-3 rounded-lg font-medium"
-                >
-                  {t('loginSignup')}
-                </Link>
-              )}
-              <LanguageSwitcher />
-            </div>
-          </div>
-        )}
-      </div>
-      {/* ...existing code... */}
-    </nav>
-  );
-}
