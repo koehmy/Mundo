@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { supabase } from '../lib/supabaseClient';
 import { useRouter } from 'next/router';
 import { CheckCircle } from 'lucide-react';
@@ -185,7 +186,7 @@ export default function ProfilePage({ session }) {
           </p>
           {profile?.role === 'admin' && (
             <div className="mt-4">
-              <a href="/admin" className="inline-block px-4 py-2 bg-emerald-900 text-white rounded-lg font-medium hover:bg-emerald-800 transition-colors">Admin Dashboard</a>
+              <Link href="/admin" className="inline-block px-4 py-2 bg-emerald-900 text-white rounded-lg font-medium hover:bg-emerald-800 transition-colors">Admin Dashboard</Link>
             </div>
           )}
 
