@@ -5,11 +5,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Menu, X, Search, PlusCircle, User, LogOut } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
-import { useTranslations } from 'next-intl';
-import LanguageSwitcher from './LanguageSwitcher';
+
 
 const NavLink = ({ href, labelKey, icon: Icon, router, onClick }) => {
-  const t = useTranslations();
+
   return (
     <Link
       href={href}
@@ -49,16 +48,25 @@ const Navbar = ({ session }) => {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center space-x-6">
-            <NavLink href="/listings" labelKey="explore" icon={Search} router={router} onClick={() => setIsMenuOpen(false)} />
+            <Link href="/listings" className="flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-300 text-stone-600 hover:text-stone-900 hover:bg-stone-50">
+              <Search size={16} />
+              <span className="font-medium tracking-wide text-sm uppercase">Explore</span>
+            </Link>
             {session ? (
               <>
-                <NavLink href="/create-listing" labelKey="list" icon={PlusCircle} router={router} onClick={() => setIsMenuOpen(false)} />
-                <NavLink href="/profile" labelKey="profile" icon={User} router={router} onClick={() => setIsMenuOpen(false)} />
+                <Link href="/create-listing" className="flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-300 text-stone-600 hover:text-stone-900 hover:bg-stone-50">
+                  <PlusCircle size={16} />
+                  <span className="font-medium tracking-wide text-sm uppercase">List</span>
+                </Link>
+                <Link href="/profile" className="flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-300 text-stone-600 hover:text-stone-900 hover:bg-stone-50">
+                  <User size={16} />
+                  <span className="font-medium tracking-wide text-sm uppercase">Profile</span>
+                </Link>
                 <button 
                   onClick={handleLogout}
                   className="ml-4 px-4 py-2 border border-stone-200 rounded-full text-sm font-medium text-stone-600 hover:border-emerald-900 hover:text-emerald-900 transition-all"
                 >
-                  {t('signOut')}
+                  Sign Out
                 </button>
               </>
             ) : (
@@ -67,11 +75,11 @@ const Navbar = ({ session }) => {
                   href="/login"
                   className="ml-4 px-5 py-2 bg-stone-900 text-stone-50 rounded-full text-sm font-medium hover:bg-emerald-900 transition-colors shadow-lg shadow-stone-200"
                 >
-                  {t('login')}
+                  Log In
                 </Link>
               </>
             )}
-            <LanguageSwitcher />
+
           </div>
 
           {/* Mobile menu button */}
@@ -86,17 +94,26 @@ const Navbar = ({ session }) => {
         {isMenuOpen && (
           <div className="md:hidden absolute w-full bg-white border-b border-stone-100 shadow-xl animate-in slide-in-from-top-2">
             <div className="px-4 pt-2 pb-6 space-y-2 flex flex-col">
-              <NavLink href="/listings" labelKey="exploreListings" icon={Search} router={router} onClick={() => setIsMenuOpen(false)} />
+              <Link href="/listings" className="flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-300 text-stone-600 hover:text-stone-900 hover:bg-stone-50">
+                <Search size={16} />
+                <span className="font-medium tracking-wide text-sm uppercase">Explore Listings</span>
+              </Link>
               {session ? (
                 <>
-                  <NavLink href="/create-listing" labelKey="createListing" icon={PlusCircle} router={router} onClick={() => setIsMenuOpen(false)} />
-                  <NavLink href="/profile" labelKey="myProfile" icon={User} router={router} onClick={() => setIsMenuOpen(false)} />
+                  <Link href="/create-listing" className="flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-300 text-stone-600 hover:text-stone-900 hover:bg-stone-50">
+                    <PlusCircle size={16} />
+                    <span className="font-medium tracking-wide text-sm uppercase">Create Listing</span>
+                  </Link>
+                  <Link href="/profile" className="flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-300 text-stone-600 hover:text-stone-900 hover:bg-stone-50">
+                    <User size={16} />
+                    <span className="font-medium tracking-wide text-sm uppercase">My Profile</span>
+                  </Link>
                   <button 
                     onClick={handleLogout}
                     className="w-full text-left px-3 py-3 text-stone-500 hover:text-red-600 flex items-center space-x-2"
                   >
                     <LogOut size={16} />
-                    <span>{t('signOut')}</span>
+                    <span>Sign Out</span>
                   </button>
                 </>
               ) : (
@@ -106,11 +123,11 @@ const Navbar = ({ session }) => {
                     onClick={() => setIsMenuOpen(false)}
                     className="w-full mt-4 block text-center bg-emerald-900 text-white py-3 rounded-lg font-medium"
                   >
-                    {t('loginSignup')}
+                    Log In / Sign Up
                   </Link>
                 </>
               )}
-              <LanguageSwitcher />
+
             </div>
           </div>
         )}
