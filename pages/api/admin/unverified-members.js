@@ -19,13 +19,13 @@ export default async function handler(req, res) {
   if (userError || !user) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-  // Check admin role
+  // Check admin role and verified status
   const { data: profile, error: profileError } = await supabaseAdmin
     .from('profiles')
-    .select('role')
+    .select('role, admin_verified')
     .eq('id', user.id)
     .single();
-  if (profileError || !profile || profile.role !== 'admin') {
+  if (profileError || !profile || profile.role !== 'admin' || profile.admin_verified !== true) {
     return res.status(403).json({ error: 'Forbidden' });
   }
   // Pagination params
